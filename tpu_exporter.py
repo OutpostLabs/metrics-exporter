@@ -8,22 +8,24 @@ global project_id
 global accelerator_utilization
 global client
 global project_name
-global tpu_utilization
+global mxu_utilization
 global duty_cycle
 global tpu_total_memory
 global memory_bandwidth_utilization
 global tpu_memory_utilized
+global total_uptime
 
 def main():
     global project_id
     global accelerator_utilization
     global client
     global project_name
-    global tpu_utilization
+    global mxu_utilization
     global duty_cycle
     global tpu_total_memory
     global memory_bandwidth_utilization
     global tpu_memory_utilized
+    global total_uptime
 
     parser = argparse.ArgumentParser(description="Fetch the project_id value.")
     
@@ -34,11 +36,13 @@ def main():
     project_id = args.variable
 
     accelerator_utilization = Gauge('accelerator_utilization', 'TPU Accelerator Utilization Percentage')
-    tpu_utilization = Gauge('tpu_utilization', 'TPU Utilization Percentage')
+    mxu_utilization = Gauge('tpu_utilization', 'TPU MXU Utilization Percentage')
     duty_cycle = Gauge('duty_cycle', "Duty Cycle")
     tpu_total_memory = Gauge('tpu_total_memory', "Total Memory")
     tpu_memory_utilized = Gauge('tpu_memory_utilized', "tpu memory utilized")
-    memory_bandwidth_utilization = Gauge("memory_bandwidth_utilization", "memory_bandwidth_utilization")
+    memory_bandwidth_utilization = Gauge("memory_bandwidth_utilization", "memory bandwidth utilization")
+    total_uptime = Gauge("total_uptime", "total uptime")
+
 
     client = monitoring_v3.MetricServiceClient()
     project_name = f"projects/{project_id}"
@@ -80,10 +84,11 @@ if __name__ == "__main__":
     start_http_server(9102)  
     while True:
         fetch_utilization("tpu.googleapis.com/accelerator/duty_cycle", duty_cycle)
-        fetch_utilization("tpu.googleapis.com/tpu/mxu/utilization", tpu_utilization)
+        fetch_utilization("tpu.googleapis.com/tpu/mxu/utilization", mxu_utilization)
         fetch_utilization("tpu.googleapis.com/accelerator/memory_total", tpu_total_memory)
         fetch_utilization("tpu.googleapis.com/accelerator/memory_used", tpu_memory_utilized)
         fetch_utilization("tpu.googleapis.com/accelerator/memory_bandwidth_utilization", memory_bandwidth_utilization)
         fetch_utilization("tpu.googleapis.com/accelerator/tensorcore_utilization", accelerator_utilization)
+        fetch_utilization("tpu.googleapis.com/instance/uptime_total", total_uptime)
 
         time.sleep(20)
