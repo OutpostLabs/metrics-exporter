@@ -9,6 +9,10 @@ global accelerator_utilization
 global client
 global project_name
 global tpu_utilization
+global duty_cycle
+global tpu_total_memory
+global memory_bandwidth_utilization
+global tpu_memory_utilized
 
 def main():
     global project_id
@@ -16,6 +20,10 @@ def main():
     global client
     global project_name
     global tpu_utilization
+    global duty_cycle
+    global tpu_total_memory
+    global memory_bandwidth_utilization
+    global tpu_memory_utilized
 
     parser = argparse.ArgumentParser(description="Fetch the project_id value.")
     
@@ -27,7 +35,10 @@ def main():
 
     accelerator_utilization = Gauge('accelerator_utilization', 'TPU Accelerator Utilization Percentage')
     tpu_utilization = Gauge('tpu_utilization', 'TPU Utilization Percentage')
-
+    duty_cycle = Gauge('duty_cycle', "Duty Cycle")
+    tpu_total_memory = Gauge('tpu_total_memory', "Total Memory")
+    tpu_memory_utilized = Gauge('tpu_memory_utilized', "tpu memory utilized")
+    memory_bandwidth_utilization = Gauge("memory_bandwidth_utilization", "memory_bandwidth_utilization")
 
     client = monitoring_v3.MetricServiceClient()
     project_name = f"projects/{project_id}"
@@ -57,7 +68,7 @@ def fetch_utilization(metric_type, prometheus_metric):
 
         for result in results:
             for point in result.points:
-                utilization = point.value.double_value * 100 
+                utilization = point.value.double_value
                 prometheus_metric.set(utilization)
 
     except Exception as e:
@@ -68,9 +79,11 @@ if __name__ == "__main__":
     main()
     start_http_server(9102)  
     while True:
-        
+        fetch_utilization("tpu.googleapis.com/accelerator/duty_cycle", duty_cycle)
         fetch_utilization("tpu.googleapis.com/tpu/mxu/utilization", tpu_utilization)
-
+        fetch_utilization("tpu.googleapis.com/accelerator/memory_total", tpu_total_memory)
+        fetch_utilization("tpu.googleapis.com/accelerator/memory_used", tpu_memory_utilized)
+        fetch_utilization("tpu.googleapis.com/accelerator/memory_bandwidth_utilization", memory_bandwidth_utilization)
         fetch_utilization("tpu.googleapis.com/accelerator/tensorcore_utilization", accelerator_utilization)
 
         time.sleep(20)
